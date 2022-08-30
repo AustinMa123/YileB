@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html> 
+ <head>
+    <style>
+      #gameCanvas {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }    
+    </style>
+</head>
+<body>
+<canvas id="gameCanvas" width="300" height="300"  > </canvas>
+<script>
+//https://www.educative.io/blog/javascript-snake-game-tutorial	
+const snakeboard = document.getElementById("gameCanvas");
+const snakeboard_ctx = gameCanvas.getContext("2d");
+ 
+const board_background = "black";
+const snake_col = 'lightblue';
+const snake_border = 'darkblue';
+const CELL=10;
+let dx=CELL,dy=0;
+let startx=200,starty=200,startL=5; //initial position and Length of the snake
+let score = 0;
+ 
+let food_x;
+let food_y;
+let game;
+let sn;
+    
+document.addEventListener("keydown", change_direction);
+let direction;
+function change_direction(event){  
+    let key = event.keyCode;  
+    if( key == 37 && direction != "RIGHT"){  
+        direction= "LEFT";  
+        dx=-CELL,dy=0;
+    }else if(key == 38 && direction != "DOWN"){  
+        direction = "UP";  
+        dx=0,dy=-CELL;
+    }else if(key == 39 && direction != "LEFT"){  
+        direction = "RIGHT";
+        dx=CELL,dy=0   
+    }else if(key == 40 && direction != "UP"){  
+        direction = "DOWN";  
+        dx=0,dy=CELL;
+    }  
+}
+ 
+var snake=function(x0,y0) {
+	this.body=[];
+	this.head={x:x0,y:y0};
+	this.init=function() {
+		for (let i=0;i<startL;i++) {
+			xv=x0-CELL*(i);
+			this.body[i]={x:xv,y:y0};
+			}
+		}
+	this.draw=function() {			
+		snakeboard_ctx.strokestyle = snake_border;		
+		for (let i=0;i<this.body.length;i++) {
+			if (i==0) {snakeboard_ctx.fillStyle='red';}
+			else {snakeboard_ctx.fillStyle=snake_col;}
+			snakeboard_ctx.fillRect(this.body[i].x, this.body[i].y, CELL, CELL);  
+			snakeboard_ctx.strokeRect(this.body[i].x, this.body[i].y, CELL, CELL);
+			}		
+		}	
+	this.move=function() {  
+		this.body.unshift(this.head); //add head to snake
+		this.head = {x: this.head.x + dx, y: this.head.y+dy}; //dx-horizontal speed
+		//eaten food-> grow, if not pop()->just move  
+		if (this.head.x === food_x && this.head.y === food_y) 
+			{        
+			score += 10;	  
+			// Generate new food location
+			gen_food();
+			} 
+		else {
+				// Remove the last part of snake body
+				this.body.pop();
+			}  
+		}
+	}	
+ 
+function has_game_ended()
+{  
+  for (let i = startL-1; i < sn.body.length; i++)
+  {    
+    const has_collided = sn.body[i].x === sn.body[0].x && sn.body[i].y === sn.body[0].y
+    //The head of the snake collides with its body
+    if (has_collided) 
+      return true
+  }
+  const hitLeftWall = sn.body[0].x < 0;  
+  const hitRightWall = sn.body[0].x > snakeboard.width - 10;
+  const hitToptWall = sn.body[0].y < 0;
+  const hitBottomWall = sn.body[0].y > snakeboard.height - 10;
+  //The head of the snake collides with the canvas boundary
+  return hitLeftWall ||  hitRightWall || hitToptWall || hitBottomWall
+}
+ 
+snakeboard_ctx.font = "25px serif";
+snakeboard_ctx.strokeStyle="#FFFFFF";
+function drawtext(text,x,y){	
+	y=snakeboard_ctx.measureText("M").width*1.5+y;
+	snakeboard_ctx.strokeText(text, x,y); 
+ }
+ 
+function clearCanvas() {
+      snakeboard_ctx.fillStyle = board_background;
+      snakeboard_ctx.fillRect(0, 0, snakeboard.width, snakeboard.height);
+      snakeboard_ctx.strokeRect(0, 0, snakeboard.width, snakeboard.height);
+      //snakeboard_ctx.clearRect(0, 0, snakeboard.width, snakeboard.height);
+    }
+    
+function random_food(min, max)
+{  
+   return Math.round((Math.random() * (max-min) + min) / CELL) * CELL;
+}
+ 
+function drawFood()
+{
+      snakeboard_ctx.fillStyle = 'lightgreen';
+      snakeboard_ctx.strokestyle = 'darkgreen';
+      snakeboard_ctx.fillRect(food_x, food_y, CELL, CELL);
+      snakeboard_ctx.strokeRect(food_x, food_y, CELL, CELL);
+}
+ 
+function gen_food() 
+{  
+   food_x = random_food(0, snakeboard.width - CELL);
+   food_y = random_food(0, snakeboard.height - CELL);
+   //to ensure that the food is not located where the snake currently is.
+   if (sn.body.filter ((m)=> m.x===food_x && m.y===food_y).length>0) {
+	   gen_food();
+   }
+}
+ 
+function gameover(){
+	alert("game over");
+	clearInterval(game);
+	new_game();
+	}
+ 
+function main() {			
+	    if (has_game_ended()) {gameover();}
+	
+        clearCanvas(); 
+        drawtext("score: "+score.toString(),0,0);
+        sn.move();
+        sn.draw();
+        drawFood();
+		//window.requestAnimationFrame(main);
+    }
+    
+ 
+ 
+function new_game() {
+	score=0;
+	sn=new snake(200,200);
+	sn.init();
+	gen_food();
+	game=setInterval(main,100);
+}
+ 
+new_game();
+ 
+</script>
+</body>
+<html> 
